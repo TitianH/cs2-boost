@@ -1,0 +1,42 @@
+{
+  "priority": {
+    "existed": true,
+    "previous_value": 5
+  },
+  "hpet": {
+    "was_enabled": false
+  },
+  "gamedvr": {
+    "gamedvr_enabled": 1,
+    "appcapture_enabled": 0
+  },
+  "gpu": {},
+  "network": {
+    "global_tcp_ack_frequency": 1,
+    "global_tcp_nodelay": 1,
+    "interfaces": {
+      "{82db2c7a-5899-4c43-a876-159fdcc75a48}": {
+        "tcp_ack_frequency": 1,
+        "tcp_nodelay": 1
+      },
+      "{98cf8f2a-408e-11ef-941a-806e6f6e6963}": {
+        "tcp_ack_frequency": 1,
+        "tcp_nodelay": 1
+      },
+      "{a84420b6-5842-49f6-bc01-997743186842}": {
+        "tcp_ack_frequency": 1,
+        "tcp_nodelay": 1
+      },
+      "{f20518b9-9779-41d0-a505-17d2e19ce26e}": {
+        "tcp_ack_frequency": 1,
+        "tcp_nodelay": 1
+      }
+    }
+  },
+  "power": {
+    "previous_plan_guid": "381b4222-f694-41f0-9685-ff5bb260df2e",
+    "previous_plan_name": "381b4222-f694-41f0-9685-ff5bb260df2e  (Ausbalanciert)"
+  },
+  "visual": {},
+  "backup_version": "1.0"
+}
