@@ -15,6 +15,8 @@ type BackupData struct {
 	Network        *NetworkBackup        `json:"network,omitempty"`
 	Power          *PowerBackup          `json:"power,omitempty"`
 	Visual         *VisualBackup         `json:"visual,omitempty"`
+	CS2Config      *CS2ConfigBackup      `json:"cs2config,omitempty"`
+	LaunchOpts     *LaunchOptsBackup     `json:"launchopts,omitempty"`
 	BackupVersion  string                `json:"backup_version"`
 }
 
@@ -54,6 +56,16 @@ type PowerBackup struct {
 
 type VisualBackup struct {
 	VisualFXSetting *uint64 `json:"visualfx_setting,omitempty"`
+}
+
+type CS2ConfigBackup struct {
+	Existed         bool    `json:"existed"`
+	PreviousContent *string `json:"previous_content,omitempty"`
+	ConfigPath      string  `json:"config_path,omitempty"`
+}
+
+type LaunchOptsBackup struct {
+	PreviousOptions string `json:"previous_options,omitempty"`
 }
 
 func GetBackupPath() (string, error) {

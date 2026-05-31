@@ -4,11 +4,14 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"cs2-boost/pkg/backup"
+	"cs2-boost/pkg/cs2config"
 	"cs2-boost/pkg/gamedvr"
 	"cs2-boost/pkg/gpu"
 	"cs2-boost/pkg/hpet"
+	"cs2-boost/pkg/launchopts"
 	"cs2-boost/pkg/network"
 	"cs2-boost/pkg/power"
 	"cs2-boost/pkg/priority"
@@ -72,6 +75,8 @@ func printUsage() {
 	fmt.Println("  • Optimize network settings (disable Nagle's Algorithm)")
 	fmt.Println("  • Set High Performance power plan")
 	fmt.Println("  • Optimize visual effects for performance")
+	fmt.Println("  • Apply CS2 launch options (Steam)")
+	fmt.Println("  • Apply CS2 config tweaks (autoexec.cfg)")
 	fmt.Println()
 	fmt.Println("Note: Requires administrator privileges")
 }
@@ -92,15 +97,17 @@ func handleInstall() {
 	fmt.Println("Installing CS2 optimizations...")
 	fmt.Println()
 
-	fmt.Print("[0/7] Creating backup of current settings... ")
+	fmt.Print("[0/9] Creating backup of current settings... ")
 	backupData := &backup.BackupData{
-		Priority: priority.BackupCurrent(),
-		HPET:     hpet.BackupCurrent(),
-		GameDVR:  gamedvr.BackupCurrent(),
-		GPU:      gpu.BackupCurrent(),
-		Network:  network.BackupCurrent(),
-		Power:    power.BackupCurrent(),
-		Visual:   visual.BackupCurrent(),
+		Priority:   priority.BackupCurrent(),
+		HPET:       hpet.BackupCurrent(),
+		GameDVR:    gamedvr.BackupCurrent(),
+		GPU:        gpu.BackupCurrent(),
+		Network:    network.BackupCurrent(),
+		Power:      power.BackupCurrent(),
+		Visual:     visual.BackupCurrent(),
+		CS2Config:  cs2config.BackupCurrent(),
+		LaunchOpts: launchopts.BackupCurrent(),
 	}
 	if err := backup.Save(backupData); err != nil {
 		fmt.Printf("FAILED\n      Error: %v\n", err)
@@ -109,51 +116,68 @@ func handleInstall() {
 	}
 	fmt.Println("OK")
 
-	fmt.Print("[1/7] Setting cs2.exe priority to High... ")
+	fmt.Print("[1/9] Setting cs2.exe priority to High... ")
 	if err := priority.SetCS2Priority(); err != nil {
 		fmt.Printf("FAILED\n      Error: %v\n", err)
 	} else {
 		fmt.Println("OK")
 	}
 
-	fmt.Print("[2/7] Disabling HPET... ")
+	fmt.Print("[2/9] Disabling HPET... ")
 	if err := hpet.Disable(); err != nil {
 		fmt.Printf("FAILED\n      Error: %v\n", err)
 	} else {
 		fmt.Println("OK")
 	}
 
-	fmt.Print("[3/7] Disabling Game DVR/Game Bar... ")
+	fmt.Print("[3/9] Disabling Game DVR/Game Bar... ")
 	if err := gamedvr.Disable(); err != nil {
 		fmt.Printf("FAILED\n      Error: %v\n", err)
 	} else {
 		fmt.Println("OK")
 	}
 
-	fmt.Print("[4/7] Enabling Hardware GPU scheduling... ")
+	fmt.Print("[4/9] Enabling Hardware GPU scheduling... ")
 	if err := gpu.EnableHardwareScheduling(); err != nil {
 		fmt.Printf("FAILED\n      Error: %v\n", err)
 	} else {
 		fmt.Println("OK")
 	}
 
-	fmt.Print("[5/7] Optimizing network settings... ")
+	fmt.Print("[5/9] Optimizing network settings... ")
 	if err := network.OptimizeForGaming(); err != nil {
 		fmt.Printf("FAILED\n      Error: %v\n", err)
 	} else {
 		fmt.Println("OK")
 	}
 
-	fmt.Print("[6/7] Setting High Performance power plan... ")
+	fmt.Print("[6/9] Setting High Performance power plan... ")
 	if err := power.SetHighPerformance(); err != nil {
 		fmt.Printf("FAILED\n      Error: %v\n", err)
 	} else {
 		fmt.Println("OK")
 	}
 
-	fmt.Print("[7/7] Optimizing visual effects... ")
+	fmt.Print("[7/9] Optimizing visual effects... ")
 	if err := visual.OptimizeForPerformance(); err != nil {
 		fmt.Printf("FAILED\n      Error: %v\n", err)
+	} else {
+		fmt.Println("OK")
+	}
+
+	fmt.Print("[8/9] Applying CS2 launch options... ")
+	if err := launchopts.ApplyLaunchOptions(); err != nil {
+		fmt.Printf("FAILED\n      Error: %v\n", err)
+		if strings.Contains(err.Error(), "Steam is currently running") {
+			fmt.Println("      Please close Steam and run install again to apply launch options.")
+		}
+	} else {
+		fmt.Println("OK")
+	}
+
+	fmt.Print("[9/9] Applying CS2 config tweaks... ")
+	if err := cs2config.ApplyOptimizedConfig(); err != nil {
+		fmt.Printf("FAILED\n      Error: %v\n      (CS2 not found)\n", err)
 	} else {
 		fmt.Println("OK")
 	}
@@ -191,50 +215,64 @@ func handleUninstall() {
 		return
 	}
 
-	fmt.Print("[1/7] Restoring cs2.exe priority... ")
+	fmt.Print("[1/9] Restoring cs2.exe priority... ")
 	if err := priority.RestoreFromBackup(backupData.Priority); err != nil {
 		fmt.Printf("FAILED\n      Error: %v\n", err)
 	} else {
 		fmt.Println("OK")
 	}
 
-	fmt.Print("[2/7] Restoring HPET setting... ")
+	fmt.Print("[2/9] Restoring HPET setting... ")
 	if err := hpet.RestoreFromBackup(backupData.HPET); err != nil {
 		fmt.Printf("FAILED\n      Error: %v\n", err)
 	} else {
 		fmt.Println("OK")
 	}
 
-	fmt.Print("[3/7] Restoring Game DVR/Game Bar... ")
+	fmt.Print("[3/9] Restoring Game DVR/Game Bar... ")
 	if err := gamedvr.RestoreFromBackup(backupData.GameDVR); err != nil {
 		fmt.Printf("FAILED\n      Error: %v\n", err)
 	} else {
 		fmt.Println("OK")
 	}
 
-	fmt.Print("[4/7] Restoring GPU scheduling... ")
+	fmt.Print("[4/9] Restoring GPU scheduling... ")
 	if err := gpu.RestoreFromBackup(backupData.GPU); err != nil {
 		fmt.Printf("FAILED\n      Error: %v\n", err)
 	} else {
 		fmt.Println("OK")
 	}
 
-	fmt.Print("[5/7] Restoring network settings... ")
+	fmt.Print("[5/9] Restoring network settings... ")
 	if err := network.RestoreFromBackup(backupData.Network); err != nil {
 		fmt.Printf("FAILED\n      Error: %v\n", err)
 	} else {
 		fmt.Println("OK")
 	}
 
-	fmt.Print("[6/7] Restoring power plan... ")
+	fmt.Print("[6/9] Restoring power plan... ")
 	if err := power.RestoreFromBackup(backupData.Power); err != nil {
 		fmt.Printf("FAILED\n      Error: %v\n", err)
 	} else {
 		fmt.Println("OK")
 	}
 
-	fmt.Print("[7/7] Restoring visual effects... ")
+	fmt.Print("[7/9] Restoring visual effects... ")
 	if err := visual.RestoreFromBackup(backupData.Visual); err != nil {
+		fmt.Printf("FAILED\n      Error: %v\n", err)
+	} else {
+		fmt.Println("OK")
+	}
+
+	fmt.Print("[8/9] Restoring CS2 launch options... ")
+	if err := launchopts.RestoreFromBackup(backupData.LaunchOpts); err != nil {
+		fmt.Printf("FAILED\n      Error: %v\n", err)
+	} else {
+		fmt.Println("OK")
+	}
+
+	fmt.Print("[9/9] Restoring CS2 config... ")
+	if err := cs2config.RestoreFromBackup(backupData.CS2Config); err != nil {
 		fmt.Printf("FAILED\n      Error: %v\n", err)
 	} else {
 		fmt.Println("OK")
@@ -387,6 +425,28 @@ func handleStatus() {
 			fmt.Println("Visual Effects:   ✓ OPTIMIZED (Performance)")
 		} else {
 			fmt.Println("Visual Effects:   ✗ DEFAULT")
+		}
+	}
+
+	launchOptsStatus, err := launchopts.GetStatus()
+	if err != nil {
+		fmt.Printf("Launch Options:   ERROR (%v)\n", err)
+	} else {
+		if launchOptsStatus {
+			fmt.Println("Launch Options:   ✓ OPTIMIZED")
+		} else {
+			fmt.Println("Launch Options:   ✗ DEFAULT")
+		}
+	}
+
+	cs2ConfigStatus, err := cs2config.GetStatus()
+	if err != nil {
+		fmt.Printf("CS2 Config:       ERROR (%v)\n", err)
+	} else {
+		if cs2ConfigStatus {
+			fmt.Println("CS2 Config:       ✓ OPTIMIZED")
+		} else {
+			fmt.Println("CS2 Config:       ✗ DEFAULT")
 		}
 	}
 }

@@ -13,7 +13,10 @@ func Disable() error {
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		outputStr := string(output)
-		if strings.Contains(outputStr, "not currently exist") || strings.Contains(outputStr, "nicht vorhanden") {
+		// Check if element doesn't exist (already disabled) - this is OK
+		if strings.Contains(outputStr, "not currently exist") || 
+		   strings.Contains(outputStr, "nicht vorhanden") ||
+		   strings.Contains(outputStr, "Element nicht gefunden") {
 			return nil
 		}
 		return fmt.Errorf("bcdedit failed: %w - %s", err, outputStr)

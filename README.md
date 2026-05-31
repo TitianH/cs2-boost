@@ -6,7 +6,7 @@ Modular Go tool for optimizing Counter-Strike 2 performance on Windows.
 
 **Build:**
 ```powershell
-.\build.ps1
+.\build.bat
 ```
 
 **Install optimizations (run as Administrator):**
@@ -15,6 +15,10 @@ Modular Go tool for optimizing Counter-Strike 2 performance on Windows.
 ```
 
 Then restart your PC.
+
+**Important Notes:**
+- **Close Steam before running install** - Launch options can only be applied when Steam is not running
+- Steam must be installed and CS2 must be in your library for launch options and config tweaks to work
 
 ## Features
 
@@ -25,6 +29,8 @@ Then restart your PC.
 - **Network Optimization**: Disables Nagle's Algorithm for lower latency
 - **Power Plan**: Sets Windows to High Performance mode
 - **Visual Effects**: Optimizes Windows visual effects for performance
+- **CS2 Launch Options**: Auto-detects Steam and applies optimized launch options
+- **CS2 Config Tweaks**: Creates optimized autoexec.cfg with network/performance settings
 - **Safe Backup/Restore**: Automatically backs up all settings before making changes
 - **Complete Restoration**: Uninstall restores exact previous settings from backup
 - **Modular Design**: Clean package structure for easy extension
@@ -66,8 +72,8 @@ go build -o cs2-boost.exe .
 ```
 
 Or use the build script:
-```powershell
-.\build.ps1
+```batch
+.\build.bat
 ```
 
 ## Project Structure
@@ -78,28 +84,65 @@ cs2-boost/
 ├── pkg/
 │   ├── backup/
 │   │   └── backup.go      # Backup/restore system
+│   ├── cs2config/
+│   │   └── cs2config.go   # CS2 autoexec.cfg management
 │   ├── gamedvr/
 │   │   └── gamedvr.go     # Xbox Game DVR/Game Bar management
 │   ├── gpu/
 │   │   └── gpu.go         # GPU scheduling optimization
 │   ├── hpet/
 │   │   └── hpet.go        # HPET management
+│   ├── launchopts/
+│   │   └── launchopts.go  # Steam launch options management
 │   ├── network/
 │   │   └── network.go     # Network latency optimization
 │   ├── power/
 │   │   └── power.go       # Power plan management
 │   ├── priority/
 │   │   └── priority.go    # Process priority management
+│   ├── steam/
+│   │   └── steam.go       # Steam installation detection
 │   ├── utils/
 │   │   └── admin.go       # Admin privilege checks
 │   └── visual/
 │       └── visual.go      # Visual effects optimization
 ├── go.mod
-└── build.ps1
+└── .gitignore
 ```
 
 Each module includes `BackupCurrent()` and `RestoreFromBackup()` functions for safe state management.
 
-## PowerShell Alternative
+### CS2-Specific Features
+- **Auto-detection**: Finds Steam installation and CS2 game files automatically
+- **Launch Options**: Applies optimized flags (`-high`, `-nojoy`, `-novid`, auto-detected `-threads`)
+- **Config Tweaks**: Creates `autoexec.cfg` with network settings (rate 786432, cl_interp 0, etc.)
 
-For those who prefer PowerShell, `Set-CS2Priority.ps1` is still available for priority-only setting.
+## What Gets Applied
+
+### Launch Options
+```
+-high -nojoy -novid +fps_max 0 +cl_forcepreload 1 -threads [auto-detected] +exec autoexec
+```
+
+### autoexec.cfg (Merged, not replaced)
+The tool adds a marked section to your existing autoexec.cfg:
+```
+// === CS2-BOOST START - DO NOT EDIT THIS SECTION ===
+// Network settings
+rate 786432
+cl_interp 0
+cl_interp_ratio 1
+cl_updaterate 128
+cl_cmdrate 128
+
+// Performance
+fps_max 0
+engine_low_latency_sleep_after_client_tick true
+
+// Mouse
+m_rawinput 1
+m_mousespeed 0
+// === CS2-BOOST END ===
+```
+
+**Your existing settings are preserved!** The tool only manages the section between the markers.
