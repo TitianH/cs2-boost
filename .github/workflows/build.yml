@@ -1,0 +1,95 @@
+name: Build CS2-Boost
+
+on:
+  push:
+    branches: [ main, master ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build for Windows
+    runs-on: windows-latest
+    
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            goarch: amd64
+            name: cs2-boost-windows-amd64.exe
+          - arch: amd64-v3
+            goarch: amd64
+            goamd64: v3
+            name: cs2-boost-windows-amd64-v3.exe
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+
+    - name: Get dependencies
+      run: go mod download
+
+    - name: Build
+      env:
+        GOOS: windows
+        GOARCH: ${{ matrix.goarch }}
+        GOAMD64: ${{ matrix.goamd64 || 'v1' }}
+      run: |
+        go build -ldflags="-s -w" -o ${{ matrix.name }} .
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.name }}
+        path: ${{ matrix.name }}
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: artifacts/**/*.exe
+        body: |
+          ## CS2 Performance Boost Tool
+          
+          ### Downloads
+          - **cs2-boost-windows-amd64.exe** - Compatible with all CPUs (Intel & AMD)
+          - **cs2-boost-windows-amd64-v3.exe** - Optimized for modern CPUs (Intel Haswell+ / AMD Excavator+)
+          
+          ### Installation
+          1. Download the appropriate version
+          2. Right-click → Run as Administrator
+          3. Choose option 1 to install optimizations
+          
+          ### Features
+          - Process Priority optimization
+          - HPET disable
+          - Game DVR/Game Bar disable
+          - GPU Hardware Scheduling
+          - Network optimization
+          - Power plan optimization
+          - Visual effects optimization
+          - CS2 Launch Options (auto-detects Steam)
+          - CS2 Config tweaks (merges with existing autoexec.cfg)
+          
+          **Important:** Close Steam before installing to apply launch options.
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
