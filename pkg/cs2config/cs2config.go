@@ -16,15 +16,20 @@ const (
 )
 
 var optimizedSettings = map[string]string{
-	"rate":                                       "786432",
-	"cl_interp":                                  "0",
-	"cl_interp_ratio":                            "1",
-	"cl_updaterate":                              "128",
-	"cl_cmdrate":                                 "128",
-	"fps_max":                                    "0",
-	"engine_low_latency_sleep_after_client_tick": "true",
-	"m_rawinput":                                 "1",
-	"m_mousespeed":                               "0",
+	// Network settings (2025 optimal)
+	"rate":            "786432", // Max bandwidth for CS2 (128-tick)
+	"cl_interp":       "0",      // Auto-calculate interpolation
+	"cl_interp_ratio": "1",      // Minimal interpolation (stable connection)
+	"cl_updaterate":   "128",    // Server update frequency
+	"cl_cmdrate":      "128",    // Client command frequency
+	
+	// Performance settings
+	"fps_max": "0", // Unlimited FPS for lowest input lag
+	"engine_low_latency_sleep_after_client_tick": "true", // Reduce microstutter
+	
+	// Mouse settings
+	"m_rawinput":   "1", // Direct mouse input (bypasses Windows)
+	"m_mousespeed": "0", // Disable Windows mouse speed
 }
 
 func GetConfigFilePath() (string, error) {
@@ -261,7 +266,7 @@ func RestoreFromBackup(b *backup.CS2ConfigBackup) error {
 
 	for _, configAccount := range b.Configs {
 		configPath := configAccount.ConfigPath
-		
+
 		if !configAccount.Existed {
 			// Config didn't exist before, remove it
 			os.Remove(configPath)
