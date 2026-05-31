@@ -1,13 +1,12 @@
 # CS2 Performance Boost Tool
 
-[![Build](https://github.com/YOUR_USERNAME/cs2-boost/actions/workflows/build.yml/badge.svg)](https://github.com/YOUR_USERNAME/cs2-boost/actions/workflows/build.yml)
-[![Test](https://github.com/YOUR_USERNAME/cs2-boost/actions/workflows/test.yml/badge.svg)](https://github.com/YOUR_USERNAME/cs2-boost/actions/workflows/test.yml)
+[![Build](https://github.com/TitianH/cs2-boost/actions/workflows/build.yml/badge.svg)](https://github.com/TitianH/cs2-boost/actions/workflows/build.yml)
 
 Modular Go tool for optimizing Counter-Strike 2 performance on Windows.
 
 ## Download
 
-**[Latest Release](https://github.com/YOUR_USERNAME/cs2-boost/releases/latest)**
+**[Latest Release](https://github.com/TitianH/cs2-boost/releases/latest)**
 
 - **cs2-boost-windows-amd64.exe** - Universal (works on all Intel & AMD CPUs)
 - **cs2-boost-windows-amd64-v3.exe** - Optimized for modern CPUs (Intel Haswell 2013+ / AMD Excavator 2015+)
@@ -15,7 +14,7 @@ Modular Go tool for optimizing Counter-Strike 2 performance on Windows.
 ## Quick Start
 
 **Option 1: Download pre-built executable**
-1. Download from [Releases](https://github.com/YOUR_USERNAME/cs2-boost/releases/latest)
+1. Download from [Releases](https://github.com/TitianH/cs2-boost/releases/latest)
 2. Right-click `cs2-boost.exe` → **Run as Administrator**
 3. Choose option 1 to install optimizations
 4. Restart your PC
