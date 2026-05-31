@@ -27,6 +27,8 @@ func main() {
 	if !utils.IsAdmin() {
 		fmt.Println("Error: This tool requires administrator privileges")
 		fmt.Println("Please run as administrator")
+		fmt.Println("\nPress Enter to exit...")
+		fmt.Scanln()
 		os.Exit(1)
 	}
 
@@ -35,8 +37,8 @@ func main() {
 	statusCmd := flag.NewFlagSet("status", flag.ExitOnError)
 
 	if len(os.Args) < 2 {
-		printUsage()
-		os.Exit(1)
+		runInteractiveMode()
+		return
 	}
 
 	switch os.Args[1] {
@@ -54,6 +56,47 @@ func main() {
 	default:
 		printUsage()
 		os.Exit(1)
+	}
+}
+
+func runInteractiveMode() {
+	fmt.Println("===========================================")
+	fmt.Println("  CS2 Performance Boost Tool v" + version)
+	fmt.Println("===========================================")
+	fmt.Println()
+	fmt.Println("What would you like to do?")
+	fmt.Println()
+	fmt.Println("  1. Install optimizations")
+	fmt.Println("  2. Uninstall (restore previous settings)")
+	fmt.Println("  3. Check status")
+	fmt.Println("  4. Exit")
+	fmt.Println()
+	fmt.Print("Enter your choice (1-4): ")
+
+	var choice string
+	fmt.Scanln(&choice)
+	fmt.Println()
+
+	switch choice {
+	case "1":
+		handleInstall()
+		fmt.Println("\nPress Enter to exit...")
+		fmt.Scanln()
+	case "2":
+		handleUninstall()
+		fmt.Println("\nPress Enter to exit...")
+		fmt.Scanln()
+	case "3":
+		handleStatus()
+		fmt.Println("\nPress Enter to exit...")
+		fmt.Scanln()
+	case "4":
+		fmt.Println("Exiting...")
+		return
+	default:
+		fmt.Println("Invalid choice. Exiting...")
+		fmt.Println("\nPress Enter to exit...")
+		fmt.Scanln()
 	}
 }
 
