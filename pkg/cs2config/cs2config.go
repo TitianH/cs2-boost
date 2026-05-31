@@ -202,51 +202,79 @@ func GetStatus() (bool, error) {
 }
 
 func BackupCurrent() *backup.CS2ConfigBackup {
-	configPath, err := GetConfigFilePath()
+	steamPath, err := steam.GetSteamPath()
 	if err != nil {
 		return &backup.CS2ConfigBackup{
-			Existed: false,
+			Configs: make(map[string]backup.CS2ConfigAccount),
 		}
 	}
 
-	content, err := os.ReadFile(configPath)
+	userdataPath := filepath.Join(steamPath, "userdata")
+	entries, err := os.ReadDir(userdataPath)
 	if err != nil {
 		return &backup.CS2ConfigBackup{
-			Existed: false,
+			Configs: make(map[string]backup.CS2ConfigAccount),
 		}
 	}
 
-	contentStr := string(content)
+	configs := make(map[string]backup.CS2ConfigAccount)
+
+	for _, entry := range entries {
+		if !entry.IsDir() || entry.Name() == "0" || entry.Name() == "ac" {
+			continue
+		}
+
+		configPath := filepath.Join(userdataPath, entry.Name(), "730", "local", "cfg", "autoexec.cfg")
+		configDir := filepath.Dir(configPath)
+
+		// Check if CS2 config directory exists
+		if _, err := os.Stat(configDir); os.IsNotExist(err) {
+			continue
+		}
+
+		content, err := os.ReadFile(configPath)
+		if err != nil {
+			configs[entry.Name()] = backup.CS2ConfigAccount{
+				Existed:    false,
+				ConfigPath: configPath,
+			}
+			continue
+		}
+
+		contentStr := string(content)
+		configs[entry.Name()] = backup.CS2ConfigAccount{
+			Existed:         true,
+			PreviousContent: &contentStr,
+			ConfigPath:      configPath,
+		}
+	}
+
 	return &backup.CS2ConfigBackup{
-		Existed:         true,
-		PreviousContent: &contentStr,
-		ConfigPath:      configPath,
+		Configs: configs,
 	}
 }
 
 func RestoreFromBackup(b *backup.CS2ConfigBackup) error {
-	if b == nil {
+	if b == nil || len(b.Configs) == 0 {
 		return nil
 	}
 
-	configPath := b.ConfigPath
-	if configPath == "" {
-		var err error
-		configPath, err = GetConfigFilePath()
-		if err != nil {
-			return err
+	for _, configAccount := range b.Configs {
+		configPath := configAccount.ConfigPath
+		
+		if !configAccount.Existed {
+			// Config didn't exist before, remove it
+			os.Remove(configPath)
+			continue
 		}
+
+		if configAccount.PreviousContent == nil {
+			continue
+		}
+
+		// Restore exact previous content
+		os.WriteFile(configPath, []byte(*configAccount.PreviousContent), 0644)
 	}
 
-	if !b.Existed {
-		// Config didn't exist before, remove our section
-		return RemoveOptimizations()
-	}
-
-	if b.PreviousContent == nil {
-		return RemoveOptimizations()
-	}
-
-	// Restore exact previous content
-	return os.WriteFile(configPath, []byte(*b.PreviousContent), 0644)
+	return nil
 }

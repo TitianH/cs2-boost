@@ -59,13 +59,17 @@ type VisualBackup struct {
 }
 
 type CS2ConfigBackup struct {
+	Configs map[string]CS2ConfigAccount `json:"configs,omitempty"` // key: Steam user ID
+}
+
+type CS2ConfigAccount struct {
 	Existed         bool    `json:"existed"`
 	PreviousContent *string `json:"previous_content,omitempty"`
 	ConfigPath      string  `json:"config_path,omitempty"`
 }
 
 type LaunchOptsBackup struct {
-	PreviousOptions string `json:"previous_options,omitempty"`
+	Accounts map[string]string `json:"accounts,omitempty"` // key: Steam user ID, value: previous launch options
 }
 
 func GetBackupPath() (string, error) {

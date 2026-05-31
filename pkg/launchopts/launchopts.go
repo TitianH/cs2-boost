@@ -211,20 +211,119 @@ func GetStatus() (bool, error) {
 }
 
 func BackupCurrent() *backup.LaunchOptsBackup {
-	current, err := GetCurrentLaunchOptions()
+	steamPath, err := steam.GetSteamPath()
 	if err != nil {
-		return &backup.LaunchOptsBackup{}
+		return &backup.LaunchOptsBackup{
+			Accounts: make(map[string]string),
+		}
+	}
+
+	userdataPath := filepath.Join(steamPath, "userdata")
+	entries, err := os.ReadDir(userdataPath)
+	if err != nil {
+		return &backup.LaunchOptsBackup{
+			Accounts: make(map[string]string),
+		}
+	}
+
+	accounts := make(map[string]string)
+
+	for _, entry := range entries {
+		if !entry.IsDir() || entry.Name() == "0" || entry.Name() == "ac" {
+			continue
+		}
+
+		configPath := filepath.Join(userdataPath, entry.Name(), "config", "localconfig.vdf")
+		
+		if _, err := os.Stat(configPath); os.IsNotExist(err) {
+			continue
+		}
+
+		content, err := os.ReadFile(configPath)
+		if err != nil {
+			continue
+		}
+
+		contentStr := string(content)
+		
+		// Check if CS2 exists
+		if !strings.Contains(contentStr, "\"730\"") {
+			continue
+		}
+
+		// Get current launch options
+		re := regexp.MustCompile(`"730"\s*\{[^}]*"LaunchOptions"\s*"([^"]*)"`)
+		matches := re.FindStringSubmatch(contentStr)
+		
+		if len(matches) > 1 {
+			accounts[entry.Name()] = matches[1]
+		} else {
+			accounts[entry.Name()] = "" // No launch options set
+		}
 	}
 
 	return &backup.LaunchOptsBackup{
-		PreviousOptions: current,
+		Accounts: accounts,
 	}
 }
 
 func RestoreFromBackup(b *backup.LaunchOptsBackup) error {
-	if b == nil {
+	if b == nil || len(b.Accounts) == 0 {
 		return nil
 	}
 
-	return RestoreLaunchOptions(b.PreviousOptions)
+	steamPath, err := steam.GetSteamPath()
+	if err != nil {
+		return err
+	}
+
+	userdataPath := filepath.Join(steamPath, "userdata")
+
+	for userID, launchOpts := range b.Accounts {
+		configPath := filepath.Join(userdataPath, userID, "config", "localconfig.vdf")
+		
+		if _, err := os.Stat(configPath); os.IsNotExist(err) {
+			continue
+		}
+
+		content, err := os.ReadFile(configPath)
+		if err != nil {
+			continue
+		}
+
+		contentStr := string(content)
+
+		// Remove ALL existing LaunchOptions entries
+		launchOptRe := regexp.MustCompile(`(?m)^\s*"LaunchOptions"\s+"[^"]*"\s*$`)
+		matches := launchOptRe.FindAllStringIndex(contentStr, -1)
+		
+		for i := len(matches) - 1; i >= 0; i-- {
+			match := matches[i]
+			lineStart := match[0]
+			lineEnd := match[1]
+			
+			if lineEnd < len(contentStr) && contentStr[lineEnd] == '\n' {
+				lineEnd++
+			} else if lineEnd < len(contentStr) && contentStr[lineEnd] == '\r' {
+				lineEnd++
+				if lineEnd < len(contentStr) && contentStr[lineEnd] == '\n' {
+					lineEnd++
+				}
+			}
+			
+			contentStr = contentStr[:lineStart] + contentStr[lineEnd:]
+		}
+
+		// If there were launch options before, restore them
+		if launchOpts != "" {
+			cs2StartRe := regexp.MustCompile(`("730"\s*\n\s*\{)\s*\n`)
+			if cs2StartRe.MatchString(contentStr) {
+				contentStr = cs2StartRe.ReplaceAllString(contentStr, "${1}\n\t\t\t\t\"LaunchOptions\"\t\t\""+launchOpts+"\"\n")
+			}
+		}
+
+		os.WriteFile(configPath, []byte(contentStr), 0644)
+	}
+
+	return nil
 }
